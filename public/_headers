@@ -28,6 +28,7 @@
 /admin/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
+  Cross-Origin-Opener-Policy: unsafe-none
 
 # Machine-readable AI files: short cache so updates propagate quickly.
 /llms.txt

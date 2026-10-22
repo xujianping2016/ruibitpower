@@ -14,7 +14,7 @@
 # an OAuth route, and stop excluding admin/ at package time.
 backend:
   name: github
-  repo: xujianping1967/ruibitpower
+  repo: xujianping2016/ruibitpower
   branch: main
   base_url: https://ruibitpower.com
   auth_endpoint: admin/auth

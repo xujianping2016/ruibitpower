@@ -9,6 +9,44 @@
          ignores Netlify's X-Robots-Tag still stays out. -->
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <meta name="referrer" content="no-referrer" />
+    <script>
+      /* OAuth callback handler: runs before Decap loads.
+         After GitHub auth, our worker redirects here with #token=...
+         If we're in a popup, send token to opener and close.
+         If we're in the main window, fetch user info, store, and reload. */
+      (function () {
+        var hash = window.location.hash;
+        if (!hash || hash.indexOf('token=') === -1) return;
+        var params = new URLSearchParams(hash.slice(1));
+        var token = params.get('token');
+        if (!token) return;
+
+        if (window.opener) {
+          /* Popup mode: hand the token to the main window. */
+          window.opener.postMessage({ type: 'AUTH_SUCCESS', token: token }, window.location.origin);
+          window.close();
+          return;
+        }
+
+        /* Full-page redirect (popup was blocked): fetch user, store, reload. */
+        fetch('https://api.github.com/user', {
+          headers: { Authorization: 'token ' + token, 'User-Agent': 'ruibitpower-decap' }
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (user) {
+            var record = { token: token, login: user.login, name: user.name || user.login };
+            localStorage.setItem('decap-cms-user', JSON.stringify(record));
+            window.location.hash = '';
+            window.location.reload();
+          })
+          .catch(function () {
+            /* If the API call fails, still store the bare token and reload. */
+            localStorage.setItem('decap-cms-user', JSON.stringify({ token: token }));
+            window.location.hash = '';
+            window.location.reload();
+          });
+      })();
+    </script>
   </head>
   <body>
     <!-- Pinned to one exact release: a caret range let the CDN serve any future
